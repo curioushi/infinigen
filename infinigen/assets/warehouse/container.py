@@ -1,5 +1,6 @@
 import bpy
 import infinigen.core.util.blender as butil
+from numpy.random import uniform, normal
 from infinigen.core.placement.factory import AssetFactory
 from infinigen.core.nodes.node_wrangler import Nodes, NodeWrangler
 from infinigen.core.nodes import node_utils
@@ -542,23 +543,29 @@ class ContainerFactory(AssetFactory):
     def __init__(self, factory_seed=None):
         super().__init__(factory_seed)
 
+    @staticmethod
+    def get_params(**params):
+        inner_size = params.pop(
+            "inner_size", (uniform(4, 18), uniform(2.2, 3.0), uniform(2.2, 3.0))
+        )
+        thickness = params.pop(
+            "thickness", (uniform(0.05, 0.3), uniform(0.05, 0.3), uniform(0.05, 0.3))
+        )
+        wave_step = params.pop("wave_step", uniform(0.2, 0.8))
+        wave_strength = params.pop("wave_strength", uniform(0.1, 0.9))
+        return {
+            "inner_size": inner_size,
+            "thickness": thickness,
+            "wave_step": wave_step,
+            "wave_strength": wave_strength,
+        }
+
     def create_asset(self, **params) -> bpy.types.Object:
         container = butil.spawn_cube(name="container")
         mod = surface.add_geomod(container, geometry_nodes)
 
         # parameters
-        inner_size = params.pop("inner_size", (6.0, 2.0, 2.0))
-        thickness = params.pop("thickness", (0.2, 0.2, 0.2))
-        wave_step = params.pop("wave_step", 0.4)
-        wave_strength = params.pop("wave_strength", 0.5)
-        surface.set_geomod_inputs(
-            mod,
-            {
-                "inner_size": inner_size,
-                "thickness": thickness,
-                "wave_step": wave_step,
-                "wave_strength": wave_strength,
-            },
-        )
-        # butil.apply_modifiers(container, mod)
+        inst_params = self.get_params(**params)
+        surface.set_geomod_inputs(mod, inst_params)
+        butil.apply_modifiers(container, mod)
         return container

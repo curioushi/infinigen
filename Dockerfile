@@ -10,8 +10,8 @@ RUN if [ "$APP_IMAGE" = "nvidia/cuda:12.0.0-devel-ubuntu22.04" ]; then \
     https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh \
     && mkdir /root/.conda \
     && bash Miniconda3-latest-Linux-x86_64.sh -b \
-    && rm -f Miniconda3-latest-Linux-x86_64.sh; \
-    && apt-get install libxkbcommon-x11-0 \
+    && rm -f Miniconda3-latest-Linux-x86_64.sh \
+    && apt-get install libxkbcommon-x11-0; \
 else \
     echo "Using Conda image" && \
     apt-get update -yq \
@@ -27,8 +27,8 @@ else \
         sudo \
         unzip \
         vim \
-        zlib1g-dev; \
-    && apt-get install libxkbcommon-x11-0 \
+        zlib1g-dev \
+    && apt-get install libxkbcommon-x11-0; \
 fi
 
 RUN mkdir /opt/infinigen
