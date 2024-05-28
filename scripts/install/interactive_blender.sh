@@ -12,7 +12,7 @@ OS=$(uname -s)
 ARCH=$(uname -m)
 
 if [ "${OS}" = "Linux" ]; then
-    BLENDER_WGET_LINK='https://download.blender.org/release/Blender3.6/blender-3.6.0-linux-x64.tar.xz'
+    BLENDER_WGET_LINK='https://mirrors.tuna.tsinghua.edu.cn/blender/blender-release/Blender3.6/blender-3.6.0-linux-x64.tar.xz'
     BLENDER_WGET_FILE='blender.tar.xz'
 
     BLENDER_UNTAR_DIR='blender-3.6.0-linux-x64'
