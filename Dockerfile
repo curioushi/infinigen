@@ -38,6 +38,9 @@ COPY infinigen.zip .
 RUN unzip infinigen.zip && rm -f infinigen.zip
 RUN conda init bash \
     && . ~/.bashrc \
+    && conda create --name infinigen python=3.10 \
+    && conda activate infinigen \
+    && echo "conda activate infinigen" >> ~/.bashrc \
     && python -m pip install --upgrade pip \
     && pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple \
     && INFINIGEN_MINIMAL_INSTALL=True pip install -e .
