@@ -16,8 +16,8 @@ coverage.xml
 
 slurm-*.out
 __pycache__
-*.blend
-*.blend1
+*.blend*
+*.zip
 *.obj
 *.DS_Store
 **._.DS_Store
@@ -64,6 +64,7 @@ build
 dist
 build
 blends
+output/
 *.ipynb_checkpoints
 
 process_mesh
