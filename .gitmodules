@@ -34,3 +34,6 @@
 [submodule "infinigen/OcMesher"]
 	path = infinigen/OcMesher
 	url = https://github.com/princeton-vl/OcMesher.git
+[submodule "infinigen/tools/resolve_collision"]
+	path = infinigen/tools/resolve_collision
+	url = https://github.com/curioushi/resolve_collision
