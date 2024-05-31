@@ -27,13 +27,13 @@ XAUTH=/tmp/.docker.xauth
 default:
 
 docker-build:
-	rm -rf infinigen.zip && git ls-files | zip -@ infinigen.zip \
+	rm -rf infinigen.zip && git ls-files | zip -@ infinigen.zip && rm -rf .git/modules && zip -r infinigen.zip .git \
 		&& docker build \
 		--tag $(DOCKER_TAG) \
 		--progress $(DOCKER_BUILD_PROGRESS) .
 
 docker-build-cuda:
-	rm -rf infinigen.zip && git ls-files | zip -@ infinigen.zip \
+	rm -rf infinigen.zip && git ls-files | zip -@ infinigen.zip  && rm -rf .git/modules && zip -r infinigen.zip .git \
 		&& docker build \
 		--tag $(DOCKER_TAG) \
 		--progress $(DOCKER_BUILD_PROGRESS) \

@@ -34,9 +34,22 @@ def ensure_submodules():
             ["git", "submodule", "update", "--init", "--recursive"], cwd=cwd, check=True
         )
 
+def build_resolve_collision():
+    subprocess.run(
+        ["git", "submodule", "update", "infinigen/tools/resolve_collision"], cwd=cwd, check=True
+    )
+    subprocess.run(
+        ["cargo", "build", "--release"], cwd=cwd / "infinigen/tools/resolve_collision", check=True
+    )
+    subprocess.run(
+        ["cargo", "install", "--path", "."], cwd=cwd / "infinigen/tools/resolve_collision", check=True
+    )
+
 
 if not MINIMAL_INSTALL:
     ensure_submodules()
+
+build_resolve_collision()
 
 # inspired by https://github.com/pytorch/pytorch/blob/161ea463e690dcb91a30faacbf7d100b98524b6b/setup.py#L290
 # theirs seems to not exclude dist_info but this causes duplicate compiling in my tests
