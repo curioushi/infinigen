@@ -40,15 +40,17 @@ def load_pcd_binary(filepath):
                 break
         data = f.read()
 
-    point_size = 3 * 4
+    point_size = 6 * 4
     num_points = len(data) // point_size
 
     points = np.zeros((num_points, 3), dtype=np.float32)
+    normals = np.zeros((num_points, 3), dtype=np.float32)
     for i in range(num_points):
-        x, y, z = struct.unpack_from("fff", data, offset=i * point_size)
+        x, y, z, nx, ny, nz = struct.unpack_from("ffffff", data, offset=i * point_size)
         points[i] = [x, y, z]
+        normals[i] = [nx, ny, nz]
 
-    return points
+    return points, normals
 
 
 def create_pointcloud_mesh(points):
@@ -114,5 +116,5 @@ def generate_lidar_clouds(cubes, scene_objs, lidars: List[Lidar]):
         stderr=PIPE,
     )
 
-    pc = load_pcd_binary(output_pcd)
-    return create_pointcloud_mesh(pc)
+    pc, normals = load_pcd_binary(output_pcd)
+    return pc, normals
