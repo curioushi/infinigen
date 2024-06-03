@@ -109,12 +109,17 @@ def generate_lidar_clouds(cubes, scene_objs, lidars: List[Lidar]):
         )
 
     # run simulate_lidar
-    output_pcd = f"{temp_dir}/clouds.pcd"
     subprocess.run(
-        ["simulate_lidar", "-i", temp_dir, "-o", output_pcd],
+        ["simulate_lidar", "-i", temp_dir, "-o", temp_dir],
         stdout=PIPE,
         stderr=PIPE,
     )
-
+    output_pcd = f"{temp_dir}/cloud.pcd"
     pc, normals = load_pcd_binary(output_pcd)
-    return pc, normals
+
+    # get visibility mask
+    output_visibility = f"{temp_dir}/visibility.json"
+    with open(output_visibility, "r") as f:
+        visibility_mask = json.load(f)
+
+    return pc, normals, visibility_mask
