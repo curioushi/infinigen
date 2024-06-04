@@ -83,10 +83,14 @@ class EnablePhysics:
             with butil.SelectObjects(a):
                 bpy.ops.rigidbody.objects_add(type="ACTIVE")
                 bpy.ops.rigidbody.mass_calculate()
+                bpy.context.object.rigid_body.use_margin = True
+                bpy.context.object.rigid_body.collision_margin = 0
         for p in self.passives:
             with butil.SelectObjects(p):
                 bpy.ops.rigidbody.objects_add(type="PASSIVE")
                 bpy.context.object.rigid_body.collision_shape = "MESH"
+                bpy.context.object.rigid_body.use_margin = True
+                bpy.context.object.rigid_body.collision_margin = 0
 
     def __exit__(self, *_):
         bpy.ops.rigidbody.world_remove()

@@ -22,7 +22,7 @@ for cube in cubes:
         cube,
         translation=uniform(-0.03, 0.03, 3),
         rotation=uniform(-0.1, 0.1, 3),
-        scale=uniform(0.9, 0.95, 3),  # TODO: enlarge the scale
+        scale=uniform(0.9, 1.0, 3),
         local=True,
     )
 
@@ -39,7 +39,6 @@ decorate.transform(plane5, translation=(0, 3, 0), rotation=(np.pi / 2, 0, 0))
 
 
 fall_time = 200
-# TODO: set collision margin
 with physics.EnablePhysics(cubes, [plane, plane2, plane3, plane4, plane5]):
     bpy.context.scene.frame_end = fall_time
     with Suppress():
