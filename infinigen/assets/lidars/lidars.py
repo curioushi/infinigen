@@ -38,6 +38,9 @@ class Lidar:
             "num_frames": self.num_frames,
         }
 
+    def __del__(self):
+        butil.delete([self.empty])
+
 
 class MID360(Lidar):
     def __init__(self, name, num_frames=1, location=None, rotation=None):
@@ -123,9 +126,10 @@ def add_noise(points, normals, noise_std):
     )
 
 
-def create_pointcloud_mesh(points):
+def create_pointcloud_mesh(points, name=None):
+    name = name or "PointCloud"
     mesh = bpy.data.meshes.new(name="PointCloudMesh")
-    obj = bpy.data.objects.new("PointCloud", mesh)
+    obj = bpy.data.objects.new(name, mesh)
     bpy.context.collection.objects.link(obj)
 
     bm = bmesh.new()
