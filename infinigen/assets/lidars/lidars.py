@@ -53,6 +53,13 @@ def load_pcd_binary(filepath):
     return points, normals
 
 
+def add_noise(points, normals, noise_std):
+    return (
+        points
+        + normals * np.random.normal(0, noise_std, size=points.shape[0])[..., None]
+    )
+
+
 def create_pointcloud_mesh(points):
     mesh = bpy.data.meshes.new(name="PointCloudMesh")
     obj = bpy.data.objects.new("PointCloud", mesh)
