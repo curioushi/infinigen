@@ -24,12 +24,16 @@ import infinigen.core.util.blender as butil
 from pathlib import Path
 
 
-def write_box_json(filepath, boxes):
+def write_box_json(filepath, visible_boxes, invisible_boxes):
     data = []
-    for box in boxes:
+    for box in visible_boxes:
         tf = np.array(box.matrix_world.normalized()).astype(float)
         size = np.array(box.scale).astype(float)
-        data.append({"tf": tf.tolist(), "size": size.tolist()})
+        data.append({"tf": tf.tolist(), "size": size.tolist(), "visible": True})
+    for box in invisible_boxes:
+        tf = np.array(box.matrix_world.normalized()).astype(float)
+        size = np.array(box.scale).astype(float)
+        data.append({"tf": tf.tolist(), "size": size.tolist(), "visible": False})
     with open(filepath, "w") as f:
         json.dump(data, f)
 
@@ -106,17 +110,18 @@ for i in range(100):
     visible_list = []
     for v, cube in zip(visibility_mask, cubes):
         if v < 0.5:
+            cube["visible"] = 0
             invisible_list.append(cube)
         else:
+            cube["visible"] = 1
             visible_list.append(cube)
 
-    pc_noise = add_noise(pc, normals, 0.01)
+    pc_noise = add_noise(pc, normals, 0.00)
 
     points_to_keep, points_to_remove = remove_points_near(
-        visible_list, [container], pc, distance=0.03
+        visible_list, None, pc, distance=0.001
     )
 
-    butil.delete(invisible_list)
     cloud_mesh = create_pointcloud_mesh(points_to_keep, name="Cloud")
 
     output_dir = Path(f"output/container_{i:04}")
@@ -125,8 +130,7 @@ for i in range(100):
 
     # write point cloud
     write_pcd_binary(str(output_dir / "cloud.pcd"), points_to_keep)
-    write_box_json(str(output_dir / "boxes.json"), cubes)
-    write_box_json(str(output_dir / "visible_boxes.json"), visible_list)
+    write_box_json(str(output_dir / "boxes.json"), visible_list, invisible_list)
     # write container
     with open(str(output_dir / "container.json"), "w") as f:
         json.dump(
@@ -136,9 +140,5 @@ for i in range(100):
                 "height": inner_size[2],
             },
             f,
-        )
-    with butil.SelectObjects([container]):
-        bpy.ops.export_mesh.stl(
-            filepath=str(output_dir / "container.stl"), use_selection=True
         )
     butil.save_blend(str(output_dir / "scene.blend"))
