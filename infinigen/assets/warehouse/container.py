@@ -568,4 +568,7 @@ class ContainerFactory(AssetFactory):
         inst_params = self.get_params(**params)
         surface.set_geomod_inputs(mod, inst_params)
         butil.apply_modifiers(container, mod)
+
+        # set custom properties
+        container["inner_size"] = inst_params["inner_size"]
         return container

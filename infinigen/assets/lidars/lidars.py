@@ -28,18 +28,17 @@ class Lidar:
         self.name = name
         self.model = model
         self.num_frames = num_frames
-        self.empty = butil.spawn_empty(self.name, disp_type="ARROWS", s=0.2)
-        decorate.transform(self.empty, translation=location, rotation=rotation)
+        self.object = butil.spawn_empty(self.name, disp_type="ARROWS", s=0.2)
+        decorate.transform(self.object, translation=location, rotation=rotation)
 
     def get_info(self):
         return {
-            "tf": np.array(self.empty.matrix_world.normalized()).astype(float).tolist(),
+            "tf": np.array(self.object.matrix_world.normalized())
+            .astype(float)
+            .tolist(),
             "model": self.model,
             "num_frames": self.num_frames,
         }
-
-    def __del__(self):
-        butil.delete([self.empty])
 
 
 class MID360(Lidar):
@@ -137,10 +136,6 @@ def create_pointcloud_mesh(points, name=None):
         bm.verts.new(v)
     bm.to_mesh(mesh)
     bm.free()
-
-    obj.display_type = "WIRE"
-    bpy.context.view_layer.objects.active = obj
-    obj.select_set(True)
     return obj
 
 

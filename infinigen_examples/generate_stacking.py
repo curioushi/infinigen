@@ -97,48 +97,11 @@ for i in range(100):
     container = container_factory.create_asset(inner_size=inner_size)
     decorate.transform(container, translation=[inner_size[0] / 2, 0, inner_size[1] / 2])
 
-    lidar1 = MID360(
-        "J1-1", num_frames=5, location=(0.0, 0, 1.0), rotation=(np.pi / 2, 0, 0)
-    )
-    lidar2 = MID360(
-        "J1-2", num_frames=5, location=(0.0, 0, 1.0), rotation=(-np.pi / 2, 0, 0)
-    )
-    lidars = [lidar1, lidar2]
-    pc, normals, visibility_mask = generate_lidar_clouds(cubes, [container], lidars)
+    butil.group_in_collection(cubes, "GT World")
+    butil.group_in_collection([container], "GT World")
 
-    invisible_list = []
-    visible_list = []
-    for v, cube in zip(visibility_mask, cubes):
-        if v < 0.5:
-            cube["visible"] = 0
-            invisible_list.append(cube)
-        else:
-            cube["visible"] = 1
-            visible_list.append(cube)
-
-    pc_noise = add_noise(pc, normals, 0.00)
-
-    points_to_keep, points_to_remove = remove_points_near(
-        visible_list, None, pc, distance=0.001
-    )
-
-    cloud_mesh = create_pointcloud_mesh(points_to_keep, name="Cloud")
-
-    output_dir = Path(f"output/container_{i:04}")
+    output_dir = Path(f"output/{i:04}")
     shutil.rmtree(output_dir, ignore_errors=True)
     os.makedirs(output_dir, exist_ok=True)
 
-    # write point cloud
-    write_pcd_binary(str(output_dir / "cloud.pcd"), points_to_keep)
-    write_box_json(str(output_dir / "boxes.json"), visible_list, invisible_list)
-    # write container
-    with open(str(output_dir / "container.json"), "w") as f:
-        json.dump(
-            {
-                "length": inner_size[0],
-                "width": inner_size[1],
-                "height": inner_size[2],
-            },
-            f,
-        )
     butil.save_blend(str(output_dir / "scene.blend"))
