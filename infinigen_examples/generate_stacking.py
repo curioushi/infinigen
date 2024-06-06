@@ -12,28 +12,16 @@ from infinigen.assets.warehouse.stacking import (
 from infinigen.assets.warehouse.container import ContainerFactory
 from infinigen.assets.utils import physics, decorate
 from infinigen.core.util.logging import Suppress
-from infinigen.assets.lidars import (
-    MID360,
-    generate_lidar_clouds,
-    create_pointcloud_mesh,
-    add_noise,
-    remove_points_near,
-    write_pcd_binary,
-)
 import infinigen.core.util.blender as butil
 from pathlib import Path
 
 
-def write_box_json(filepath, visible_boxes, invisible_boxes):
+def write_box_json(filepath, boxes):
     data = []
-    for box in visible_boxes:
+    for box in boxes:
         tf = np.array(box.matrix_world.normalized()).astype(float)
         size = np.array(box.scale).astype(float)
-        data.append({"tf": tf.tolist(), "size": size.tolist(), "visible": True})
-    for box in invisible_boxes:
-        tf = np.array(box.matrix_world.normalized()).astype(float)
-        size = np.array(box.scale).astype(float)
-        data.append({"tf": tf.tolist(), "size": size.tolist(), "visible": False})
+        data.append({"tf": tf.tolist(), "size": size.tolist()})
     with open(filepath, "w") as f:
         json.dump(data, f)
 
