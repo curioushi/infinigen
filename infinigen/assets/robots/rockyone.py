@@ -1,10 +1,14 @@
 from typing import List
+import json
 import bpy
 import numpy as np
 
 from infinigen.assets.robots.robot import Action
 from .robot import Robot, ActionRemoveObjects
+import infinigen.assets.robots.motion as motion
+from infinigen.core import surface
 import infinigen.core.util.blender as butil
+import infinigen.assets.utils.decorate as decorate
 from infinigen.assets.lidars import (
     MID360,
     generate_lidar_clouds,
@@ -12,6 +16,30 @@ from infinigen.assets.lidars import (
     remove_points_near,
     create_pointcloud_mesh,
 )
+
+
+def simple_material(name, color):
+    if name in bpy.data.materials:
+        return bpy.data.materials[name]
+    material = bpy.data.materials.new(name=name)
+    material.use_nodes = True
+    nodes = material.node_tree.nodes
+    for node in nodes:
+        nodes.remove(node)
+
+    bsdf_node = nodes.new(type="ShaderNodeBsdfPrincipled")
+    bsdf_node.location = (0, 0)
+
+    output_node = nodes.new(type="ShaderNodeOutputMaterial")
+    output_node.location = (200, 0)
+
+    links = material.node_tree.links
+    links.new(bsdf_node.outputs["BSDF"], output_node.inputs["Surface"])
+
+    bsdf_node.inputs["Base Color"].default_value = color
+    bsdf_node.inputs["Roughness"].default_value = 0.5
+    return material
+
 
 ROCKYONE = None
 
@@ -97,11 +125,47 @@ class RockyOne(Robot):
             }
         return self.perception_result
 
-    def motion_planning(self):
-        actions = []
+    def dump_perception(self, output_dir):
+        if self.perception_result is None:
+            raise Exception("No perception result to dump")
+
+        data = []
         for cube in self.perception_result["cubes"]:
-            world_cube = bpy.data.objects[cube["link_name"]]
-            actions.append(ActionRemoveObjects([cube, world_cube]))
+            data.append(
+                {
+                    "tf": np.array(cube.matrix_world.normalized())
+                    .astype(float)
+                    .tolist(),
+                    "size": np.array(cube.scale).astype(float).tolist(),
+                }
+            )
+        with open(f"{output_dir}/boxes.json", "w") as f:
+            json.dump(data, f)
+
+    def motion_planning(self):
+        perception_world = butil.get_collection("Perception World")
+        planning_world = butil.get_collection("Planning World")
+        butil.delete_collection(planning_world)
+        planning_world = butil.get_collection("Planning World")
+
+        for obj in perception_world.objects:
+            new_obj = obj.copy()
+            new_obj.data = obj.data.copy()
+            butil.group_in_collection([new_obj], "Planning World")
+
+        cubes = [obj for obj in planning_world.objects if "CUBE" in obj.name.upper()]
+        motion.align_axis(cubes)
+        pickable_mask = motion.pickable(cubes)
+
+        pickable_cubes = [cube for cube, pickable in zip(cubes, pickable_mask) if pickable]
+        green_mat = simple_material("Green", (0, 1, 0, 1))
+        decorate.assign_material(pickable_cubes, green_mat)
+
+        actions = []
+        for (cube, pickable) in zip(self.perception_result["cubes"], pickable_mask):
+            if pickable:
+                world_cube = bpy.data.objects[cube["link_name"]]
+                actions.append(ActionRemoveObjects([cube, world_cube]))
         self.actions_result = actions
         return self.actions_result
 
