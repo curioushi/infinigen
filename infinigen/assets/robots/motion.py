@@ -85,3 +85,14 @@ def pickable(cubes):
         pickable = json.load(f)
 
     return pickable
+
+# def pick_plan(boxes, pickable_mask, gripper):
+#     if not check_executable("pickable"):
+#         raise Exception("pickable executable not found")
+    
+#     # create temporary directory
+#     temp_dir = tempfile.mkdtemp()
+
+#     input_boxes_file = f"{temp_dir}/boxes.json"
+#     input_pickable_file = f"{temp_dir}/pickable.json"
+#     input_gripper_file = f"{temp_dir}/gripper.json"
