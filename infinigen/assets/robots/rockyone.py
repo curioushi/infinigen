@@ -6,9 +6,8 @@ import numpy as np
 from infinigen.assets.robots.robot import Action
 from .robot import Robot, ActionRemoveObjects
 import infinigen.assets.robots.motion as motion
-from infinigen.core import surface
 import infinigen.core.util.blender as butil
-import infinigen.assets.utils.decorate as decorate
+import infinigen.assets.materials.simple_color as simple_color
 from infinigen.assets.lidars import (
     MID360,
     generate_lidar_clouds,
@@ -16,29 +15,6 @@ from infinigen.assets.lidars import (
     remove_points_near,
     create_pointcloud_mesh,
 )
-
-
-def simple_material(name, color):
-    if name in bpy.data.materials:
-        return bpy.data.materials[name]
-    material = bpy.data.materials.new(name=name)
-    material.use_nodes = True
-    nodes = material.node_tree.nodes
-    for node in nodes:
-        nodes.remove(node)
-
-    bsdf_node = nodes.new(type="ShaderNodeBsdfPrincipled")
-    bsdf_node.location = (0, 0)
-
-    output_node = nodes.new(type="ShaderNodeOutputMaterial")
-    output_node.location = (200, 0)
-
-    links = material.node_tree.links
-    links.new(bsdf_node.outputs["BSDF"], output_node.inputs["Surface"])
-
-    bsdf_node.inputs["Base Color"].default_value = color
-    bsdf_node.inputs["Roughness"].default_value = 0.5
-    return material
 
 
 ROCKYONE = None
@@ -157,12 +133,13 @@ class RockyOne(Robot):
         motion.align_axis(cubes)
         pickable_mask = motion.pickable(cubes)
 
-        pickable_cubes = [cube for cube, pickable in zip(cubes, pickable_mask) if pickable]
-        green_mat = simple_material("Green", (0, 1, 0, 1))
-        decorate.assign_material(pickable_cubes, green_mat)
+        pickable_cubes = [
+            cube for cube, pickable in zip(cubes, pickable_mask) if pickable
+        ]
+        simple_color.apply(pickable_cubes, "GREEN")
 
         actions = []
-        for (cube, pickable) in zip(self.perception_result["cubes"], pickable_mask):
+        for cube, pickable in zip(self.perception_result["cubes"], pickable_mask):
             if pickable:
                 world_cube = bpy.data.objects[cube["link_name"]]
                 actions.append(ActionRemoveObjects([cube, world_cube]))
