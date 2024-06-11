@@ -86,13 +86,39 @@ def pickable(cubes):
 
     return pickable
 
-# def pick_plan(boxes, pickable_mask, gripper):
-#     if not check_executable("pickable"):
-#         raise Exception("pickable executable not found")
-    
-#     # create temporary directory
-#     temp_dir = tempfile.mkdtemp()
 
-#     input_boxes_file = f"{temp_dir}/boxes.json"
-#     input_pickable_file = f"{temp_dir}/pickable.json"
-#     input_gripper_file = f"{temp_dir}/gripper.json"
+def pick_plan(boxes, pickable_mask, gripper_filepath):
+    if not check_executable("pickable"):
+        raise Exception("pickable executable not found")
+
+    # create temporary directory
+    temp_dir = tempfile.mkdtemp()
+
+    input_boxes_file = f"{temp_dir}/boxes.json"
+    write_cube_json(input_boxes_file, boxes)
+    input_pickable_file = f"{temp_dir}/pickable.json"
+    with open(input_pickable_file, "w") as f:
+        json.dump(pickable_mask, f)
+
+    output_pick_plan_file = f"{temp_dir}/pick_plan.json"
+
+    subprocess.run(
+        [
+            "pick_plan",
+            "--boxes",
+            input_boxes_file,
+            "--pickable",
+            input_pickable_file,
+            "--gripper",
+            gripper_filepath,
+            "--output",
+            output_pick_plan_file,
+        ],
+        stderr=PIPE,
+        stdout=PIPE,
+    )
+
+    with open(output_pick_plan_file, "r") as f:
+        pick_plan = json.load(f)
+
+    return pick_plan

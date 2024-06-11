@@ -1,13 +1,17 @@
+import os
 from typing import List
 import json
 import bpy
 import numpy as np
+from mathutils import Matrix
 
 from infinigen.assets.robots.robot import Action
 from .robot import Robot, ActionRemoveObjects
+from infinigen.assets.robots.gripper import create_gripper
 import infinigen.assets.robots.motion as motion
 import infinigen.core.util.blender as butil
 import infinigen.assets.materials.simple_color as simple_color
+from infinigen.assets.scatters import scatter_transform
 from infinigen.assets.lidars import (
     MID360,
     generate_lidar_clouds,
@@ -45,6 +49,11 @@ class RockyOne(Robot):
             location=(0.0, 0, 1.0),
             rotation=(np.pi / 2, 0, 0),
         )
+        self.gripper_filepath = (
+            "/home/shq/Projects/mycode/resolve_collision/data/pick_plan/gripper.json"
+        )
+        if not os.path.exists(self.gripper_filepath):
+            raise Exception("Gripper file not found")
         butil.parent_to(self.lidar_j1_left.object, self.base_link)
         butil.parent_to(self.lidar_j1_right.object, self.base_link)
         self.lidars = [self.lidar_j1_left, self.lidar_j1_right]
@@ -119,25 +128,45 @@ class RockyOne(Robot):
             json.dump(data, f)
 
     def motion_planning(self):
+        # initialize planning world
         perception_world = butil.get_collection("Perception World")
         planning_world = butil.get_collection("Planning World")
         butil.delete_collection(planning_world)
         planning_world = butil.get_collection("Planning World")
-
         for obj in perception_world.objects:
             new_obj = obj.copy()
             new_obj.data = obj.data.copy()
             butil.group_in_collection([new_obj], "Planning World")
 
+        # do motion planning
         cubes = [obj for obj in planning_world.objects if "CUBE" in obj.name.upper()]
         motion.align_axis(cubes)
         pickable_mask = motion.pickable(cubes)
+        pick_plans = motion.pick_plan(cubes, pickable_mask, self.gripper_filepath)
+        
+        # visualize
+        gripper, suction_groups = create_gripper("Gripper", self.gripper_filepath)
+        gripper_poses = [Matrix(pp["tf_world_flange"]) for pp in pick_plans]
+        suction_group_masks = np.array([pp["suction_group_mask"] for pp in pick_plans])
+        positions = np.array([gripper_pose.to_translation() for gripper_pose in gripper_poses])
+        rotations = np.array([gripper_pose.to_euler() for gripper_pose in gripper_poses])
+        grippers = scatter_transform.spawn(gripper, positions, rotations, "Gripper")
+        butil.group_in_collection([gripper, grippers], "Planning World")
+        butil.delete([gripper])
+        for i, (suction_group, suction_group_mask) in enumerate(zip(suction_groups, suction_group_masks.T)):
+            suction_positions = positions[suction_group_mask]
+            suction_rotations = rotations[suction_group_mask]
+            suctions = scatter_transform.spawn(suction_group, suction_positions, suction_rotations, "Suction")
+            butil.group_in_collection([suction_group, suctions], "Planning World")
+        butil.delete(suction_groups)
+        
 
         pickable_cubes = [
             cube for cube, pickable in zip(cubes, pickable_mask) if pickable
         ]
         simple_color.apply(pickable_cubes, "GREEN")
 
+        # generate actions
         actions = []
         for cube, pickable in zip(self.perception_result["cubes"], pickable_mask):
             if pickable:
