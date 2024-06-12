@@ -142,24 +142,37 @@ class RockyOne(Robot):
         cubes = [obj for obj in planning_world.objects if "CUBE" in obj.name.upper()]
         motion.align_axis(cubes)
         pickable_mask = motion.pickable(cubes)
-        pick_plans = motion.pick_plan(cubes, pickable_mask, self.gripper_filepath)
+        pick_plans = motion.pick_plan(
+            cubes, pickable_mask, self.gripper_filepath, max_payload=35.0, dsafe=0.0
+        )
+        pickable_mask = [False] * len(pickable_mask)
+        for pick_plan in pick_plans:
+            pickable_mask[pick_plan['main_box_index']] = True
         
+
         # visualize
         gripper, suction_groups = create_gripper("Gripper", self.gripper_filepath)
         gripper_poses = [Matrix(pp["tf_world_flange"]) for pp in pick_plans]
         suction_group_masks = np.array([pp["suction_group_mask"] for pp in pick_plans])
-        positions = np.array([gripper_pose.to_translation() for gripper_pose in gripper_poses])
-        rotations = np.array([gripper_pose.to_euler() for gripper_pose in gripper_poses])
+        positions = np.array(
+            [gripper_pose.to_translation() for gripper_pose in gripper_poses]
+        )
+        rotations = np.array(
+            [gripper_pose.to_euler() for gripper_pose in gripper_poses]
+        )
         grippers = scatter_transform.spawn(gripper, positions, rotations, "Gripper")
         butil.group_in_collection([gripper, grippers], "Planning World")
         butil.delete([gripper])
-        for i, (suction_group, suction_group_mask) in enumerate(zip(suction_groups, suction_group_masks.T)):
+        for i, (suction_group, suction_group_mask) in enumerate(
+            zip(suction_groups, suction_group_masks.T)
+        ):
             suction_positions = positions[suction_group_mask]
             suction_rotations = rotations[suction_group_mask]
-            suctions = scatter_transform.spawn(suction_group, suction_positions, suction_rotations, "Suction")
+            suctions = scatter_transform.spawn(
+                suction_group, suction_positions, suction_rotations, "Suction"
+            )
             butil.group_in_collection([suction_group, suctions], "Planning World")
         butil.delete(suction_groups)
-        
 
         pickable_cubes = [
             cube for cube, pickable in zip(cubes, pickable_mask) if pickable

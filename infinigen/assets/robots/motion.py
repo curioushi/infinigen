@@ -87,7 +87,7 @@ def pickable(cubes):
     return pickable
 
 
-def pick_plan(boxes, pickable_mask, gripper_filepath):
+def pick_plan(boxes, pickable_mask, gripper_filepath, **kwargs):
     if not check_executable("pickable"):
         raise Exception("pickable executable not found")
 
@@ -99,6 +99,9 @@ def pick_plan(boxes, pickable_mask, gripper_filepath):
     input_pickable_file = f"{temp_dir}/pickable.json"
     with open(input_pickable_file, "w") as f:
         json.dump(pickable_mask, f)
+    input_options_file = f"{temp_dir}/options.json"
+    with open(input_options_file, "w") as f:
+        json.dump(kwargs, f)
 
     output_pick_plan_file = f"{temp_dir}/pick_plan.json"
 
@@ -111,6 +114,8 @@ def pick_plan(boxes, pickable_mask, gripper_filepath):
             input_pickable_file,
             "--gripper",
             gripper_filepath,
+            "--options",
+            input_options_file,
             "--output",
             output_pick_plan_file,
         ],
