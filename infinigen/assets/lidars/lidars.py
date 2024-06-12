@@ -151,7 +151,7 @@ def generate_lidar_clouds(cubes, scene_objs, lidars: List[Lidar]):
     for cube in cubes:
         tf = np.array(cube.matrix_world.normalized()).astype(float)
         size = np.array(cube.scale).astype(float)
-        data.append({"tf": tf.tolist(), "size": size.tolist()})
+        data.append({"tf": tf.tolist(), "cuboid": size.tolist()})
     with open(f"{temp_dir}/boxes.json", "w") as f:
         json.dump(data, f)
 
@@ -195,7 +195,7 @@ def remove_points_near(cubes, scene_objs, points, distance=0.01):
     for cube in cubes:
         tf = np.array(cube.matrix_world.normalized()).astype(float)
         size = np.array(cube.scale).astype(float)
-        data.append({"tf": tf.tolist(), "size": size.tolist()})
+        data.append({"tf": tf.tolist(), "cuboid": size.tolist()})
     with open(f"{temp_dir}/boxes.json", "w") as f:
         json.dump(data, f)
 

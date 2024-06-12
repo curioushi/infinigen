@@ -23,7 +23,7 @@ def write_cube_json(filepath, cubes):
     for cube in cubes:
         tf = np.array(cube.matrix_world.normalized()).astype(float)
         size = np.array(cube.scale).astype(float)
-        data.append({"tf": tf.tolist(), "size": size.tolist()})
+        data.append({"tf": tf.tolist(), "cuboid": size.tolist()})
     with open(filepath, "w") as f:
         json.dump(data, f)
 
@@ -55,7 +55,7 @@ def align_axis(cubes):
     # apply transform
     for item, cube in zip(aligned_data, cubes):
         cube.matrix_world = Matrix(np.array(item["tf"]))
-        cube.scale = item["size"]
+        cube.scale = item["cuboid"]
 
     return cubes
 
