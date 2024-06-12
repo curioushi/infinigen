@@ -105,7 +105,19 @@ class RockyOne(Robot):
 
             self.perception_result = {
                 "cubes": perception_list,
-                "container": container,
+                "container": {
+                    "cuboid": np.array(container["inner_size"]).astype(float).tolist(),
+                    "tf": np.array(
+                        [
+                            [1.0, 0.0, 0.0, container["inner_size"][0]],
+                            [0.0, 1.0, 0.0, 0.0],
+                            [0.0, 0.0, 1.0, 0.0],
+                            [0.0, 0.0, 0.0, 1.0],
+                        ]
+                    )
+                    .astype(float)
+                    .tolist(),
+                },
                 "cloud": cloud_mesh,
             }
         return self.perception_result
@@ -142,13 +154,13 @@ class RockyOne(Robot):
         cubes = [obj for obj in planning_world.objects if "CUBE" in obj.name.upper()]
         motion.align_axis(cubes)
         pickable_mask = motion.pickable(cubes)
+        container = self.perception_result["container"]
         pick_plans = motion.pick_plan(
-            cubes, pickable_mask, self.gripper_filepath, max_payload=35.0, dsafe=0.0
+            cubes, pickable_mask, container, self.gripper_filepath, max_payload=35.0, dsafe=0.0
         )
         pickable_mask = [False] * len(pickable_mask)
         for pick_plan in pick_plans:
-            pickable_mask[pick_plan['main_box_index']] = True
-        
+            pickable_mask[pick_plan["main_box_index"]] = True
 
         # visualize
         gripper, suction_groups = create_gripper("Gripper", self.gripper_filepath)
