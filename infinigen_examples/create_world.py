@@ -12,7 +12,7 @@ def load_cube_json(filepath):
         for item in data:
             cube = butil.spawn_cube(size=1)
             cube.matrix_world = Matrix(np.array(item["tf"]))
-            cube.scale = item["size"]
+            cube.scale = item["cuboid"]
             cubes.append(cube)
     return cubes
 

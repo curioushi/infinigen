@@ -121,7 +121,7 @@ class RockyOne(Robot):
                     "tf": np.array(cube.matrix_world.normalized())
                     .astype(float)
                     .tolist(),
-                    "size": np.array(cube.scale).astype(float).tolist(),
+                    "cuboid": np.array(cube.scale).astype(float).tolist(),
                 }
             )
         with open(f"{output_dir}/boxes.json", "w") as f:

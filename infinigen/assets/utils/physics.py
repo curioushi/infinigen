@@ -33,7 +33,7 @@ def resolve_collision(cubes, min_bound=None, max_bound=None):
     for cube in cubes:
         tf = np.array(cube.matrix_world.normalized()).astype(float)
         size = np.array(cube.scale).astype(float)
-        data.append({"tf": tf.tolist(), "size": size.tolist()})
+        data.append({"tf": tf.tolist(), "cuboid": size.tolist()})
     with open("/tmp/stacking.json", "w") as f:
         json.dump(data, f)
 
@@ -53,7 +53,7 @@ def resolve_collision(cubes, min_bound=None, max_bound=None):
     for item, cube in zip(data, cubes):
         tf = Matrix(item["tf"])
         cube.matrix_world = tf
-        cube.scale = item["size"]
+        cube.scale = item["cuboid"]
 
 
 def free_fall(actives, passives, place_fn, t=100):
