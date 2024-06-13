@@ -28,7 +28,11 @@ def create_gripper(name, filepath):
         tf_flange_tip = np.array(data["tf_flange_tip"])
         objects = []
         for i, group in enumerate(data["suction_groups"]):
-            polygon = np.array(group["shape"])
+            rect = np.array(group["shape"])
+            mins, maxs = rect[0], rect[1]
+            polygon = np.array(
+                [mins, [maxs[0], mins[1]], maxs, [mins[0], maxs[1]], mins]
+            )
             coords = np.hstack((polygon, np.zeros((polygon.shape[0], 1))))
             coords = coords @ tf_flange_tip[:3, :3].T + tf_flange_tip[:3, 3]
             suction_group = create_polygon(f"SuctionGroup_{i}", coords)
