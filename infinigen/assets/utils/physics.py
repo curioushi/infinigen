@@ -45,7 +45,7 @@ def resolve_collision(cubes, min_bound=None, max_bound=None):
                 "--max-bound=" + ",".join(map(str, max_bound)),
             ]
         )
-    subprocess.run(cmds, stdout=PIPE, stderr=PIPE)
+    subprocess.run(cmds, stdout=None, stderr=None)
 
     with open("/tmp/stacking.json", "r") as f:
         data = json.load(f)

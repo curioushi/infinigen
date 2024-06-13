@@ -4,6 +4,7 @@ import numpy as np
 import subprocess
 from mathutils import Matrix
 from subprocess import PIPE
+from infinigen.assets.lidars import write_pcd_binary
 
 
 def check_executable(executable):
@@ -44,8 +45,8 @@ def align_axis(cubes):
     # run align_axis
     subprocess.run(
         ["align_axis", "-i", input_file, "-o", output_file],
-        stdout=PIPE,
-        stderr=PIPE,
+        stdout=None,
+        stderr=None,
     )
 
     # read aligned.json
@@ -76,8 +77,8 @@ def pickable(cubes):
     # run pickable
     subprocess.run(
         ["pickable", "-i", input_file, "-o", output_file],
-        stdout=PIPE,
-        stderr=PIPE,
+        stdout=None,
+        stderr=None,
     )
 
     # read aligned.json
@@ -87,7 +88,7 @@ def pickable(cubes):
     return pickable
 
 
-def pick_plan(boxes, pickable_mask, container, gripper_filepath, **kwargs):
+def pick_plan(boxes, pickable_mask, container, gripper_filepath, cloud=None, **kwargs):
     if not check_executable("pickable"):
         raise Exception("pickable executable not found")
 
@@ -105,28 +106,31 @@ def pick_plan(boxes, pickable_mask, container, gripper_filepath, **kwargs):
     input_options_file = f"{temp_dir}/options.json"
     with open(input_options_file, "w") as f:
         json.dump(kwargs, f)
+    input_cloud_file = None
+    if cloud is not None:
+        input_cloud_file = f"{temp_dir}/cloud.pcd"
+        write_pcd_binary(input_cloud_file, cloud)
 
     output_pick_plan_file = f"{temp_dir}/pick_plan.json"
 
-    subprocess.run(
-        [
-            "pick_plan",
-            "--boxes",
-            input_boxes_file,
-            "--pickable",
-            input_pickable_file,
-            "--container",
-            input_container_file,
-            "--gripper",
-            gripper_filepath,
-            "--options",
-            input_options_file,
-            "--output",
-            output_pick_plan_file,
-        ],
-        stderr=PIPE,
-        stdout=PIPE,
-    )
+    cmds = [
+        "pick_plan",
+        "--boxes",
+        input_boxes_file,
+        "--pickable",
+        input_pickable_file,
+        "--container",
+        input_container_file,
+        "--gripper",
+        gripper_filepath,
+        "--options",
+        input_options_file,
+        "--output",
+        output_pick_plan_file,
+    ]
+    if cloud is not None:
+        cmds.extend(["--cloud", input_cloud_file])
+    subprocess.run(cmds, stderr=None, stdout=None)
 
     with open(output_pick_plan_file, "r") as f:
         pick_plan = json.load(f)

@@ -169,8 +169,8 @@ def generate_lidar_clouds(cubes, scene_objs, lidars: List[Lidar]):
     # run simulate_lidar
     subprocess.run(
         ["simulate_lidar", "-i", temp_dir, "-o", temp_dir],
-        stdout=PIPE,
-        stderr=PIPE,
+        stdout=None,
+        stderr=None,
     )
     output_pcd = f"{temp_dir}/cloud.pcd"
     pc, normals = load_pcd_binary(output_pcd)
@@ -212,8 +212,8 @@ def remove_points_near(cubes, scene_objs, points, distance=0.01):
     # run simulate_lidar
     subprocess.run(
         ["remove_points_near", "-i", temp_dir, "-o", temp_dir, "-d", str(distance)],
-        stdout=PIPE,
-        stderr=PIPE,
+        stdout=None,
+        stderr=None,
     )
 
     points_to_keep, _ = load_pcd_binary(f"{temp_dir}/points_to_keep.pcd")

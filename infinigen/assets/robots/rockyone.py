@@ -2,6 +2,7 @@ import os
 from typing import List
 import json
 import bpy
+import shutil
 import numpy as np
 from mathutils import Matrix
 
@@ -18,6 +19,7 @@ from infinigen.assets.lidars import (
     add_noise,
     remove_points_near,
     create_pointcloud_mesh,
+    write_pcd_binary,
 )
 
 
@@ -58,7 +60,7 @@ class RockyOne(Robot):
         butil.parent_to(self.lidar_j1_right.object, self.base_link)
         self.lidars = [self.lidar_j1_left, self.lidar_j1_right]
 
-        self.perception_result = None
+        self.intermediate_result = None
         self.actions_result = None
 
         butil.group_in_collection([self.base_link], "Robot")
@@ -103,7 +105,7 @@ class RockyOne(Robot):
                 butil.group_in_collection([new_cube], name="Perception World")
             butil.group_in_collection([cloud_mesh], "Perception World")
 
-            self.perception_result = {
+            self.intermediate_result = {
                 "cubes": perception_list,
                 "container": {
                     "cuboid": np.array(container["inner_size"]).astype(float).tolist(),
@@ -118,26 +120,41 @@ class RockyOne(Robot):
                     .astype(float)
                     .tolist(),
                 },
-                "cloud": cloud_mesh,
+                "cloud": points_to_keep,
             }
-        return self.perception_result
+        return self.intermediate_result
 
-    def dump_perception(self, output_dir):
-        if self.perception_result is None:
-            raise Exception("No perception result to dump")
+    def dump_intermediate(self, output_dir):
+        if self.intermediate_result is None:
+            raise Exception("No intermediate result to dump")
 
-        data = []
-        for cube in self.perception_result["cubes"]:
-            data.append(
-                {
-                    "tf": np.array(cube.matrix_world.normalized())
-                    .astype(float)
-                    .tolist(),
-                    "cuboid": np.array(cube.scale).astype(float).tolist(),
-                }
-            )
-        with open(f"{output_dir}/boxes.json", "w") as f:
-            json.dump(data, f)
+        shutil.rmtree(output_dir, ignore_errors=True)
+        os.makedirs(output_dir, exist_ok=True)
+
+        if 'cubes' in self.intermediate_result:
+            data = []
+            for cube in self.intermediate_result["cubes"]:
+                data.append(
+                    {
+                        "tf": np.array(cube.matrix_world.normalized())
+                        .astype(float)
+                        .tolist(),
+                        "cuboid": np.array(cube.scale).astype(float).tolist(),
+                    }
+                )
+            with open(f"{output_dir}/boxes.json", "w") as f:
+                json.dump(data, f)
+
+        if 'container' in self.intermediate_result:
+            with open(f"{output_dir}/container.json", "w") as f:
+                json.dump(self.intermediate_result["container"], f)
+
+        if 'cloud' in self.intermediate_result:
+            write_pcd_binary(f"{output_dir}/cloud.pcd", self.intermediate_result["cloud"])
+
+        if 'pickable' in self.intermediate_result:
+            with open(f"{output_dir}/pickable.json", "w") as f:
+                json.dump(self.intermediate_result["pickable"], f)
 
     def motion_planning(self):
         # initialize planning world
@@ -154,9 +171,18 @@ class RockyOne(Robot):
         cubes = [obj for obj in planning_world.objects if "CUBE" in obj.name.upper()]
         motion.align_axis(cubes)
         pickable_mask = motion.pickable(cubes)
-        container = self.perception_result["container"]
+        self.intermediate_result["cubes"] = cubes
+        self.intermediate_result["pickable"] = pickable_mask
+
+        container = self.intermediate_result["container"]
         pick_plans = motion.pick_plan(
-            cubes, pickable_mask, container, self.gripper_filepath, max_payload=35.0, dsafe=0.0
+            cubes,
+            pickable_mask,
+            container,
+            self.gripper_filepath,
+            cloud=self.intermediate_result["cloud"],
+            max_payload=35.0,
+            dsafe=0.0,
         )
         pickable_mask = [False] * len(pickable_mask)
         for pick_plan in pick_plans:
@@ -193,7 +219,7 @@ class RockyOne(Robot):
 
         # generate actions
         actions = []
-        for cube, pickable in zip(self.perception_result["cubes"], pickable_mask):
+        for cube, pickable in zip(self.intermediate_result["cubes"], pickable_mask):
             if pickable:
                 world_cube = bpy.data.objects[cube["link_name"]]
                 actions.append(ActionRemoveObjects([cube, world_cube]))
