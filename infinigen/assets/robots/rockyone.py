@@ -181,7 +181,7 @@ class RockyOne(Robot):
             container,
             self.gripper_filepath,
             cloud=self.intermediate_result["cloud"],
-            linear_choice=9,
+            # max_plans_per_face=9,
             max_payload=35.0,
             dsafe=0.0,
         )
@@ -200,18 +200,18 @@ class RockyOne(Robot):
             [gripper_pose.to_euler() for gripper_pose in gripper_poses]
         )
         grippers = scatter_transform.spawn(gripper, positions, rotations, "Gripper")
-        butil.group_in_collection([gripper, grippers], "Planning World")
+        butil.group_in_collection([grippers], "Planning World")
         butil.delete([gripper])
-        for i, (suction_group, suction_group_mask) in enumerate(
-            zip(suction_groups, suction_group_masks.T)
-        ):
-            suction_positions = positions[suction_group_mask]
-            suction_rotations = rotations[suction_group_mask]
-            suctions = scatter_transform.spawn(
-                suction_group, suction_positions, suction_rotations, "Suction"
-            )
-            butil.group_in_collection([suction_group, suctions], "Planning World")
-        butil.delete(suction_groups)
+        # for i, (suction_group, suction_group_mask) in enumerate(
+        #     zip(suction_groups, suction_group_masks.T)
+        # ):
+        #     suction_positions = positions[suction_group_mask]
+        #     suction_rotations = rotations[suction_group_mask]
+        #     suctions = scatter_transform.spawn(
+        #         suction_group, suction_positions, suction_rotations, "Suction"
+        #     )
+        #     butil.group_in_collection([suction_group, suctions], "Planning World")
+        # butil.delete(suction_groups)
 
         pickable_cubes = [
             cube for cube, pickable in zip(cubes, pickable_mask) if pickable
