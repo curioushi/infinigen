@@ -181,6 +181,7 @@ class RockyOne(Robot):
             container,
             self.gripper_filepath,
             cloud=self.intermediate_result["cloud"],
+            linear_choice=9,
             max_payload=35.0,
             dsafe=0.0,
         )
