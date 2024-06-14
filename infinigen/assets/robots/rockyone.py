@@ -131,7 +131,7 @@ class RockyOne(Robot):
         shutil.rmtree(output_dir, ignore_errors=True)
         os.makedirs(output_dir, exist_ok=True)
 
-        if 'cubes' in self.intermediate_result:
+        if "cubes" in self.intermediate_result:
             data = []
             for cube in self.intermediate_result["cubes"]:
                 data.append(
@@ -145,14 +145,16 @@ class RockyOne(Robot):
             with open(f"{output_dir}/boxes.json", "w") as f:
                 json.dump(data, f)
 
-        if 'container' in self.intermediate_result:
+        if "container" in self.intermediate_result:
             with open(f"{output_dir}/container.json", "w") as f:
                 json.dump(self.intermediate_result["container"], f)
 
-        if 'cloud' in self.intermediate_result:
-            write_pcd_binary(f"{output_dir}/cloud.pcd", self.intermediate_result["cloud"])
+        if "cloud" in self.intermediate_result:
+            write_pcd_binary(
+                f"{output_dir}/cloud.pcd", self.intermediate_result["cloud"]
+            )
 
-        if 'pickable' in self.intermediate_result:
+        if "pickable" in self.intermediate_result:
             with open(f"{output_dir}/pickable.json", "w") as f:
                 json.dump(self.intermediate_result["pickable"], f)
 
@@ -181,7 +183,7 @@ class RockyOne(Robot):
             container,
             self.gripper_filepath,
             cloud=self.intermediate_result["cloud"],
-            # max_plans_per_face=9,
+            max_plans_per_face=1,
             max_payload=35.0,
             dsafe=0.0,
         )
