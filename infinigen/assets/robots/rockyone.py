@@ -185,7 +185,7 @@ class RockyOne(Robot):
             cloud=self.intermediate_result["cloud"],
             max_plans_per_face=1,
             max_payload=35.0,
-            dsafe=0.0,
+            dsafe=0.01,
         )
         pickable_mask = [False] * len(pickable_mask)
         for pick_plan in pick_plans:
