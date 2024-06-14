@@ -29,23 +29,27 @@ def write_box_json(filepath, boxes):
 for i in range(100):
     butil.clear_scene()
 
-    sku_gen = SingleSKUGenerator(SKU((0.595, 0.195, 0.395)))
+    sku_size = (0.6, 0.4, 0.38)
+    sku_gen = SingleSKUGenerator(SKU(sku_size))
     stacking_factory = SingleSKUStackingFactory()
-    inner_size = np.array([4.0, 3.0, 3.0])
+    inner_size = np.array([4.0, 2.34, 2.64])
     free_space_length = 1.0
     cubes = stacking_factory.create_boxes(
         (inner_size[0] - free_space_length, inner_size[1], inner_size[2]),
         sku_gen,
     )
+    gap_y = inner_size[1] % sku_size[1]
     for cube in cubes:
         decorate.transform(
-            cube, translation=(free_space_length, -inner_size[1] / 2, 0.3)
+            cube, translation=(free_space_length, -inner_size[1] / 2 + gap_y / 2, 0.3)
         )
         decorate.transform(
             cube,
-            translation=uniform(-0.03, 0.03, 3),
-            rotation=uniform(-0.1, 0.1, 3),
-            scale=uniform(0.9, 1.0, 3),
+            translation=uniform(-0.01, 0.01, 3),
+            rotation=uniform(0.0, 0.0, 3),
+            scale=uniform(1.00, 1.00, 3),
+            # rotation=uniform(-0.06, 0.06, 3),
+            # scale=uniform(0.98, 1.02, 3),
             local=True,
         )
 
@@ -83,7 +87,7 @@ for i in range(100):
 
     container_factory = ContainerFactory()
     container = container_factory.create_asset(inner_size=inner_size)
-    decorate.transform(container, translation=[inner_size[0] / 2, 0, inner_size[1] / 2])
+    decorate.transform(container, translation=[inner_size[0] / 2, 0, inner_size[2] / 2])
 
     butil.group_in_collection(cubes, "GT World")
     butil.group_in_collection([container], "GT World")
